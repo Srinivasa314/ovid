@@ -1,6 +1,6 @@
 # ovid
 
-ovid makes [pi](https://github.com/earendil-works/pi) **verify the features it builds**, recording a polished **terminal + browser** video of each verification onto your PR. The verifications are ordinary code (assertions decide pass/fail), so re-running them is cheap as no LLM is needed.
+ovid makes [pi](https://github.com/earendil-works/pi) verify the features it builds and record a polished terminal + browser videos of each verification onto your PR. The verifications are ordinary code (assertions decide pass/fail), so re-running them is cheap and no LLM is needed.
 
 Works on **any-language** projects (Node is only needed to run ovid). Today it plugs into the pi coding agent; support for others (Codex, Claude Code) may come later.
 
