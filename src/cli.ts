@@ -1,8 +1,8 @@
 import { Command } from "commander";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Terminal } from "./runner/pty.js";
 import { renderTerminalVideo } from "./render/replay.js";
 import { renderRun } from "./render/renderRun.js";
@@ -16,8 +16,14 @@ const collect = (v: string, acc: string[]) => {
   return acc;
 };
 
+// Read from the package's own package.json (dist/cli.js → ../package.json) so
+// the reported version always tracks the published one.
+const { version } = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "package.json"), "utf8"),
+) as { version: string };
+
 const program = new Command();
-program.name("ovid").description("Record terminal+browser test videos onto PRs").version("0.0.0");
+program.name("ovid").description("Record terminal+browser test videos onto PRs").version(version);
 
 program
   .command("init")
