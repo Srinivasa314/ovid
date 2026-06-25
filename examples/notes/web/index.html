@@ -29,6 +29,7 @@
     background: #0071e3; border: 0; border-radius: 10px; cursor: pointer;
   }
   button:hover { background: #0077ed; }
+  .search { margin-bottom: 16px; }
   .counter { margin: 0 0 10px; color: #6e6e73; font-size: 14px; font-weight: 600; }
   ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
   li {
@@ -45,6 +46,7 @@
     <input id="note" placeholder="New note" autocomplete="off" />
     <button type="submit">Save</button>
   </form>
+  <input id="search" class="search" placeholder="Search notes" autocomplete="off" />
   <div id="counter" class="counter">0 notes</div>
   <ul id="list"></ul>
 </main>
@@ -53,16 +55,20 @@
   const list = document.getElementById("list");
   const counter = document.getElementById("counter");
   const input = document.getElementById("note");
+  const search = document.getElementById("search");
 
   const escapeHtml = (s) =>
     s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   async function load() {
-    const notes = await (await fetch(API + "/notes")).json();
-    counter.textContent = `${notes.length} ${notes.length === 1 ? "note" : "notes"}`;
+    const query = search.value.trim();
+    const path = query ? `/notes/search?q=${encodeURIComponent(query)}` : "/notes";
+    const notes = await (await fetch(API + path)).json();
+    const noun = notes.length === 1 ? "note" : "notes";
+    counter.textContent = query ? `${notes.length} matching ${noun}` : `${notes.length} ${noun}`;
     list.innerHTML = notes.length
       ? notes.map((n) => `<li>${escapeHtml(n.body)}</li>`).join("")
-      : `<li class="empty">No notes yet — add one above.</li>`;
+      : `<li class="empty">${query ? "No matching notes." : "No notes yet — add one above."}</li>`;
   }
 
   document.getElementById("form").addEventListener("submit", async (e) => {
@@ -77,6 +83,8 @@
     input.value = "";
     await load();
   });
+
+  search.addEventListener("input", load);
 
   load();
 </script>

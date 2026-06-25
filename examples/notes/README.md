@@ -26,6 +26,7 @@ cd examples/notes/web && python3 -m http.server 3000
 # CLI (terminal-only)
 cd examples/notes/api && ../.venv/bin/flask --app app notes add "Buy milk"
 ../.venv/bin/flask --app app notes list
+../.venv/bin/flask --app app notes search milk
 ```
 
 Then open http://localhost:3000.
@@ -34,3 +35,4 @@ Then open http://localhost:3000.
 
 - `ovid/webapp.spec.ts` — mixed terminal + browser (start servers, add a note in the UI, assert it persisted in SQLite, reload).
 - `ovid/cli.spec.ts` — terminal-only (`flask notes add/list`).
+- `ovid/search.spec.ts` — full-text search across the REST API, web UI, and CLI.
