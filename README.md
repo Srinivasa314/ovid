@@ -20,6 +20,12 @@ Then use pi as normal. (Note: You have to trust the project the first time so th
 
 New tests are always shown with a video; tests it only *modified* are included at its discretion.
 
+## Example
+
+pi opened [this PR](https://github.com/Srinivasa314/ovid/pull/1) for the sample app, adding full-text search across the API, web UI, and `flask notes` CLI. It attached this video of its own e2e test (multiple terminals plus the browser, on one timeline):
+
+![ovid e2e video](https://github.com/Srinivasa314/ovid/releases/download/ovid-media/full-text-search-notes__search-works-across-api-web-ui-and-flask-cli__1802e05.gif)
+
 ## Features
 
 - Terminal + browser in one video, stitched on a shared timeline as a focus-cut (cuts to whichever surface is active).
