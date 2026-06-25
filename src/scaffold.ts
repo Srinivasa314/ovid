@@ -1,7 +1,43 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { packageRoot } from "./render/paths.js";
+
+const PKG_NAME = "@srinivasa314/ovid";
+
+function ownVersion(): string {
+  try {
+    return JSON.parse(readFileSync(join(packageRoot(), "package.json"), "utf8")).version as string;
+  } catch {
+    return "latest";
+  }
+}
+
+/**
+ * Ensure the project has ovid as a devDependency (creating package.json if
+ * absent). ovid runs via the project-local CLI, so it must be installed locally.
+ * Returns true if the file was created/changed and `npm install` is needed.
+ */
+async function ensureDevDependency(projectRoot: string): Promise<boolean> {
+  const pkgPath = join(projectRoot, "package.json");
+  const version = `^${ownVersion()}`;
+  let pkg: Record<string, any> = {};
+  if (existsSync(pkgPath)) {
+    try {
+      pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    } catch {
+      return false; // don't clobber an unparseable package.json
+    }
+  }
+  pkg.devDependencies ??= {};
+  if (pkg.devDependencies[PKG_NAME]) return false; // already present
+  pkg.name ??= "ovid-project";
+  pkg.version ??= "0.0.0";
+  pkg.private ??= true;
+  pkg.devDependencies[PKG_NAME] = version;
+  await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  return true;
+}
 
 const CONFIG_TEMPLATE = `import { defineConfig } from "@srinivasa314/ovid";
 
@@ -18,7 +54,7 @@ export default defineConfig({
 const GUIDE = `# Writing ovid e2e tests
 
 ovid records a polished video (terminal + browser) of a test **and** asserts behavior in code.
-Specs live in \`ovid/*.spec.ts\` and run with \`ovid test\`. Assertions decide pass/fail; the video is for humans.
+Specs live in \`ovid/*.spec.ts\` and run with \`npx ovid test\`. Assertions decide pass/fail; the video is for humans.
 
 ## Skeleton
 \`\`\`ts
@@ -66,8 +102,8 @@ test("note persists", async ({ ovid }) => {
 - Commands run from the project root (cwd of \`ovid test\`); use paths relative to it.
 - Servers are killed automatically when the test ends.
 - Each terminal/browser block becomes one video segment — keep them focused.
-- Run all specs with \`ovid test\`, or one with \`ovid test <name-substring>\`.
-- Passing runs save raw artifacts but don't render a video (kept cheap); run \`ovid render <name-substring>\` to produce \`final.mp4\`/\`.gif\` for one.
+- Run all specs with \`npx ovid test\`, or one with \`npx ovid test <name-substring>\`.
+- Passing runs save raw artifacts but don't render a video (kept cheap); run \`npx ovid render <name-substring>\` to produce \`final.mp4\`/\`.gif\` for one.
 `;
 
 async function writeIfAbsent(path: string, content: string): Promise<"created" | "exists"> {
@@ -91,9 +127,13 @@ export async function init(projectRoot: string): Promise<void> {
     [".pi/extensions/ovid.ts", await writeIfAbsent(join(projectRoot, ".pi", "extensions", "ovid.ts"), extension)],
   ];
 
+  const needsInstall = await ensureDevDependency(projectRoot);
   for (const [name, status] of items) console.log(`  ${status === "created" ? "+ created" : "= exists "} ${name}`);
+  if (needsInstall) console.log(`  + added ${PKG_NAME} to package.json devDependencies`);
+
   console.log(
-    "\nNext: add a spec in ./ovid/*.spec.ts (see ovid/WRITING-OVID-E2E-TESTS.md), then run `ovid test`." +
+    (needsInstall ? "\nNext: run `npm install` to install ovid locally, then" : "\nNext:") +
+      " add a spec in ./ovid/*.spec.ts (see ovid/WRITING-OVID-E2E-TESTS.md), then run `npx ovid test`." +
       "\npi will auto-discover the ovid_test tool from .pi/extensions/ovid.ts.",
   );
 }

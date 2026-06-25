@@ -1,11 +1,13 @@
 // ovid pi extension — written by `ovid init` into .pi/extensions/, auto-discovered by pi.
-// Lets the agent run ovid e2e tests and publish them to a PR. It shells out to
-// the global `ovid` CLI, so it has no ovid imports of its own.
+// Lets the agent run ovid e2e tests and publish them to a PR. It shells out to the
+// project-local ovid CLI (resolved from node_modules), so it has no ovid imports
+// of its own. ovid must be installed as a project devDependency.
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { execFile } from "node:child_process";
 import { existsSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 
 const WORKFLOW = [
   "## ovid e2e testing",
@@ -45,7 +47,7 @@ export default function (pi: ExtensionAPI) {
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const args = ["test", "--json"];
       if (params.spec) args.push(params.spec);
-      const out = await sh("ovid", args, ctx.cwd);
+      const out = await runOvid(args, ctx.cwd);
       let summary: Summary | null = null;
       try {
         summary = JSON.parse(out.stdout) as Summary;
@@ -86,7 +88,7 @@ export default function (pi: ExtensionAPI) {
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const featureArgs = (params.feature ?? []).flatMap((t) => ["--feature", t]);
       if (!params.claims) {
-        const out = await sh("ovid", ["publish", ...featureArgs], ctx.cwd);
+        const out = await runOvid(["publish", ...featureArgs], ctx.cwd);
         let prep: PreparePayload | null = null;
         try {
           prep = JSON.parse(out.stdout) as PreparePayload;
@@ -101,7 +103,7 @@ export default function (pi: ExtensionAPI) {
       const prArgs: string[] = [];
       if (params.prTitle) prArgs.push("--pr-title", params.prTitle);
       if (params.prSummary) prArgs.push("--pr-summary", params.prSummary);
-      const out = await sh("ovid", ["publish", "--apply", "--claims", claimsFile, ...featureArgs, ...prArgs], ctx.cwd);
+      const out = await runOvid(["publish", "--apply", "--claims", claimsFile, ...featureArgs, ...prArgs], ctx.cwd);
       let res: { ok?: boolean; prUrl?: string; error?: string } | null = null;
       try {
         res = JSON.parse(out.stdout);
@@ -153,6 +155,33 @@ interface PreparePayload {
     suggested: boolean;
     keyframes?: { path: string; kind: string; label: string; caption?: string }[];
   }[];
+}
+
+// Resolve the project-local ovid CLI (dist/cli.js) from the project's node_modules,
+// via the package main entry (dist/index.js) so it doesn't depend on the
+// package.json subpath being exported. Returns null when ovid isn't installed.
+function ovidCli(cwd: string): string | null {
+  try {
+    const req = createRequire(join(cwd, "noop.js"));
+    const entry = req.resolve("@srinivasa314/ovid"); // -> .../dist/index.js
+    return join(dirname(entry), "cli.js"); // -> .../dist/cli.js
+  } catch {
+    return null;
+  }
+}
+
+// Run the local ovid CLI with the current Node, so the Playwright that runs the
+// tests is the same instance the spec's "@srinivasa314/ovid/test" import resolves to.
+function runOvid(args: string[], cwd: string): Promise<{ code: number; stdout: string; stderr: string }> {
+  const cli = ovidCli(cwd);
+  if (!cli) {
+    return Promise.resolve({
+      code: 127,
+      stdout: "",
+      stderr: "ovid is not installed in this project. Run: npm i -D @srinivasa314/ovid",
+    });
+  }
+  return sh(process.execPath, [cli, ...args], cwd);
 }
 
 function sh(cmd: string, args: string[], cwd: string): Promise<{ code: number; stdout: string; stderr: string }> {

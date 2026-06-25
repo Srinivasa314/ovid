@@ -7,9 +7,12 @@ Works on any-language projects (Node is only needed to run ovid). Today it plugs
 ## Quick start
 
 ```bash
-npm i -g @srinivasa314/ovid      # Node ≥20; also needs Chromium (`npx playwright install chromium`) and `gh`
-cd your-project && ovid init     # scaffolds config, the spec guide, and the pi extension
+cd your-project
+npm i -D @srinivasa314/ovid       # Node ≥20; also needs Chromium (`npx playwright install chromium`) and `gh`
+npx ovid init                     # scaffolds config, the spec guide, and the pi extension
 ```
+
+ovid is installed as a project devDependency and run via `npx ovid` (the pi extension resolves the project-local CLI), so the Playwright that runs your specs is the same one the `@srinivasa314/ovid/test` import resolves to.
 
 Then use pi as normal. (Note: You have to trust the project the first time so the extension loads or pass `-a` in headless/CI). When you ask the agent to build something and open a PR, it will, on its own:
 
@@ -33,11 +36,11 @@ You can drive ovid yourself too but its primarily for agents. Write specs in `ov
 
 | Command | What it does |
 | --- | --- |
-| `ovid init` | Scaffold config, guide, `.gitignore`, pi extension |
-| `ovid test [filter]` | Run specs (records raw artifacts; videos render lazily — only on failure) |
-| `ovid render [filter]` | Render saved runs into `final.mp4`/`.gif` (e.g. to view a passing run) |
-| `ovid publish [--apply]` | Extract keyframes / upload media + create-or-update the PR |
-| `ovid doctor` | Check external components (Chromium, ffmpeg, git, gh) |
+| `npx ovid init` | Scaffold config, guide, `.gitignore`, pi extension |
+| `npx ovid test [filter]` | Run specs (records raw artifacts; videos render lazily — only on failure) |
+| `npx ovid render [filter]` | Render saved runs into `final.mp4`/`.gif` (e.g. to view a passing run) |
+| `npx ovid publish [--apply]` | Extract keyframes / upload media + create-or-update the PR |
+| `npx ovid doctor` | Check external components (Chromium, ffmpeg, git, gh) |
 
 ## How it works
 

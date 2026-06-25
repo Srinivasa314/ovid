@@ -1,6 +1,6 @@
 {
   "name": "@srinivasa314/ovid",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A minimal coding-agent layer on pi that records terminal+browser test videos onto PRs",
   "type": "module",
   "license": "MIT",
@@ -29,7 +29,8 @@
   },
   "exports": {
     ".": "./dist/index.js",
-    "./test": "./dist/test.js"
+    "./test": "./dist/test.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
