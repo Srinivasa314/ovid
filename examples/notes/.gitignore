@@ -1,0 +1,4 @@
+.venv/
+api/notes.db
+api/__pycache__/
+.ovid/

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.ovid/
+test-results/
+.claude/
+*.log
+.DS_Store
+
+# sample app
+examples/notes/.venv/
+examples/notes/api/notes.db
