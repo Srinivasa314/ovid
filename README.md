@@ -2,7 +2,7 @@
 
 ovid makes [pi](https://github.com/earendil-works/pi) verify the features it builds and record a polished terminal + browser videos of each verification onto your PR. The verifications are ordinary code (assertions decide pass/fail), so re-running them is cheap and no LLM is needed.
 
-Works on **any-language** projects (Node is only needed to run ovid). Today it plugs into the pi coding agent; support for others (Codex, Claude Code) may come later.
+Works on any-language projects (Node is only needed to run ovid). Today it plugs into the pi coding agent; support for others (Codex, Claude Code) may come later.
 
 ## Quick start
 
@@ -21,11 +21,11 @@ New tests are always shown with a video; tests it only *modified* are included a
 
 ## Features
 
-- **Terminal + browser in one video**, stitched on a shared timeline as a **focus-cut** (cuts to whichever surface is active).
-- **Multiple terminals** (named, long-lived shells) and **multiple browser tabs/pages** in a single test.
-- **Polished output**: mac window chrome, titlebar labels, lower-third captions, a moving cursor + click-ripple, readable pacing
-- **configurable** (viewport, video size/fps, pacing) via `ovid.config.ts`.
-- **Lazy rendering**: videos are produced only when you need them, like when a PR is created or a test fails so passing runs stay fast.
+- Terminal + browser in one video, stitched on a shared timeline as a focus-cut (cuts to whichever surface is active).
+- Multiple terminals (named, long-lived shells) and multiple browser tabs/pages in a single test.
+- Polished output: mac window chrome, titlebar labels, lower-third captions, a moving cursor + click-ripple, readable pacing
+- configurable (viewport, video size/fps, pacing) via `ovid.config.ts`.
+- Lazy rendering: videos are produced only when you need them, like when a PR is created or a test fails so passing runs stay fast.
 
 ## Using the ovid CLI (without an agent)
 
@@ -58,7 +58,7 @@ test("note persists", async ({ ovid }) => {
 
 A spec drives terminals and browsers and asserts behavior in code. ovid runs it while recording the real shell and the live browser against a shared timeline, then stitches a video showing them, then overlays window chrome, captions, and a cursor.
 
-Built with: **node-pty** + an asciinema cast replayed in headless **xterm.js** (terminal), **@playwright/test** + **playwright-recorder-plus** (browser), a timeline-driven focus-cut composited with **ffmpeg**.
+Built with: node-pty + an asciinema cast replayed in headless xterm.js (terminal), @playwright/test + playwright-recorder-plus (browser), a timeline-driven focus-cut composited with ffmpeg.
 
 ## Sample
 
@@ -66,4 +66,4 @@ Built with: **node-pty** + an asciinema cast replayed in headless **xterm.js** (
 
 ## Scope
 
-v0 targets **macOS, local, single-machine**. Parallel execution, Linux/CI, and remote runs are future work.
+v0 targets macOS, local, single-machine. Parallel execution, Linux/CI, and remote runs are future work.
