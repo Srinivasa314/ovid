@@ -4,6 +4,6 @@
   "private": true,
   "description": "Sample notes app used to demonstrate ovid (Flask API + SQLite + vanilla web UI + CLI)",
   "devDependencies": {
-    "@srinivasa314/ovid": "^0.0.2"
+    "@srinivasa314/ovid": "^0.0.3"
   }
 }
