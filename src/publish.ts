@@ -120,7 +120,7 @@ const artifact = (runDir: string, name: string) => (existsSync(join(runDir, name
 export async function preparePublish(cwd: string, feature: string[] = []): Promise<unknown> {
   const reportPath = join(cwd, ".ovid", "last-run.json");
   if (!existsSync(reportPath)) await runTests(cwd, { json: true });
-  if (!existsSync(reportPath)) return { ready: false, error: "no test results — run `ovid test` first", tests: [] };
+  if (!existsSync(reportPath)) return { ready: false, error: "no test results — run `npx ovid test` first", tests: [] };
 
   const pre = await preconditions(cwd);
   const specs = collectSpecs(reportPath);
@@ -166,7 +166,7 @@ export async function applyPublish(
   opts: { feature: string[]; claims: Claims; dryRun?: boolean; prTitle?: string; prSummary?: string },
 ): Promise<unknown> {
   const reportPath = join(cwd, ".ovid", "last-run.json");
-  if (!existsSync(reportPath)) return { ok: false, error: "no test results — run `ovid test` first" };
+  if (!existsSync(reportPath)) return { ok: false, error: "no test results — run `npx ovid test` first" };
   const specs = collectSpecs(reportPath);
 
   const pre = await preconditions(cwd);

@@ -99,7 +99,7 @@ test("note persists", async ({ ovid }) => {
 \`\`\`
 
 ## Rules of thumb
-- Commands run from the project root (cwd of \`ovid test\`); use paths relative to it.
+- Commands run from the project root (cwd of \`npx ovid test\`); use paths relative to it.
 - Servers are killed automatically when the test ends.
 - Each terminal/browser block becomes one video segment — keep them focused.
 - Run all specs with \`npx ovid test\`, or one with \`npx ovid test <name-substring>\`.

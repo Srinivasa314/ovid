@@ -56,7 +56,7 @@ program
   .action(async (filter: string | undefined) => {
     const runsDir = join(process.cwd(), ".ovid", "runs");
     if (!existsSync(runsDir)) {
-      console.error("No runs found. Run `ovid test` first.");
+      console.error("No runs found. Run `npx ovid test` first.");
       process.exitCode = 1;
       return;
     }
@@ -65,7 +65,7 @@ program
       .map((d) => d.name)
       .filter((name) => !filter || name.includes(filter));
     if (slugs.length === 0) {
-      console.error(filter ? `No runs match "${filter}".` : "No runs found. Run `ovid test` first.");
+      console.error(filter ? `No runs match "${filter}".` : "No runs found. Run `npx ovid test` first.");
       process.exitCode = 1;
       return;
     }

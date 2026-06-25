@@ -31,12 +31,12 @@
 - **Configurable** (viewport, pacing, theme, video size) — *config file lands in M4*.
 
 ### CLI & agent integration (M4 Stage 1)
-- **`ovid init`** — scaffolds `ovid.config.ts`, the test-writing guide, `.ovid/.gitignore`, and the pi extension at `.pi/extensions/ovid.ts`.
-- **`ovid test [filter] [--json]`** — runs specs via a generated Playwright config; `--json` emits a structured summary (used by the agent).
+- **`npx ovid init`** — scaffolds `ovid.config.ts`, the test-writing guide, `.ovid/.gitignore`, the pi extension at `.pi/extensions/ovid.ts`, and records ovid as a project devDependency.
+- **`npx ovid test [filter] [--json]`** — runs specs via a generated Playwright config; `--json` emits a structured summary (used by the agent).
 - **pi extension** — registers an `ovid_test` tool the agent calls; injects the *implement → test → fix* workflow into the system prompt (only when the project is ovid-initialized).
 
 ### PR publishing (M4 Stage 2)
-- **`ovid publish`** — prepares results + extracts keyframes (LLM-free); `--apply` uploads the mp4/gif to a reusable `ovid-media` GitHub release and creates/updates the PR (idempotent, single `<!-- ovid -->` section).
+- **`npx ovid publish`** — prepares results + extracts keyframes (LLM-free); `--apply` uploads the mp4/gif to a reusable `ovid-media` GitHub release and creates/updates the PR (idempotent, single `<!-- ovid -->` section).
 - **PR body** — a results table for all specs + per-featured-spec section: inline gif, mp4 link, and agent-written per-step claims.
 - **The agent reviews the recorded keyframes.** ovid extracts one keyframe per step (from that step's freeze-held end state); the agent *looks at those images* to confirm the behavior and write the per-step claims. The CLI itself stays LLM-free.
 - **The agent chooses which videos to attach.** *New* specs are always featured with a video; *modified* specs are flagged as suggested (detected via git) and the agent **decides** whether to include each one; unchanged specs are skipped.
@@ -45,10 +45,10 @@
 
 ## Using ovid with pi
 
-The pi extension (`.pi/extensions/ovid.ts`, written by `ovid init`) is **project-local**, so pi loads it only after the project is **trusted**:
+The pi extension (`.pi/extensions/ovid.ts`, written by `npx ovid init`) is **project-local**, so pi loads it only after the project is **trusted**:
 
 - **Interactive:** the first time you run `pi` in the project, accept the trust prompt (or run `/trust` once). The `ovid_test` / `ovid_publish` tools and the workflow then load automatically.
-- **Non-interactive / headless / CI (`pi -p`, `--mode json`):** there is no trust prompt — pass **`-a` / `--approve`** to trust for that run (or set `defaultProjectTrust: "always"` in `~/.pi/agent/settings.json`). Without trust, pi silently ignores the extension and the agent falls back to the `ovid` CLI directly.
+- **Non-interactive / headless / CI (`pi -p`, `--mode json`):** there is no trust prompt — pass **`-a` / `--approve`** to trust for that run (or set `defaultProjectTrust: "always"` in `~/.pi/agent/settings.json`). Without trust, pi silently ignores the extension and its ovid tools are unavailable.
 
 Once loaded, the agent: writes/runs ovid tests for features, and when it opens a PR (a raw `gh pr create` is **blocked and redirected** to `ovid_publish`) it attaches the e2e video + per-step claims automatically.
 

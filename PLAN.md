@@ -17,10 +17,11 @@ Single npm package `ovid`, two entry points:
 - **`ovid` (CLI + test lib)** — the standalone runner. No LLM. Makes re-runs cheap.
 - **`ovid/pi`** — the pi extension; thin tools that call the runner.
 
-**Self-contained:** **Global install** (`npm i -g ovid`); `npx ovid` also works. Bundles
+**Self-contained:** **Local devDependency** (`npm i -D @srinivasa314/ovid`), run via `npx ovid`;
+the pi extension resolves the project-local CLI so Playwright loads as a single instance. Bundles
 Playwright + node-pty + xterm. **TS specs and `ovid.config.ts` execute via the Playwright Test
-runner's built-in TypeScript** — no extra transpiler. A project gains only `ovid/` specs +
-`ovid.config.ts` — no `package.json` or `node_modules` added. Works in any-language repos untouched.
+runner's built-in TypeScript** — no extra transpiler. A project gains `ovid/` specs + `ovid.config.ts`
+plus a dev dependency in `package.json`. Works in any-language repos (Node only needed to run ovid).
 
 **Dependencies**
 - Bundled via ovid's npm install: `node-pty`, `@playwright/test` (also provides TS execution), `xterm`.

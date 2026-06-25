@@ -12,8 +12,6 @@ npm i -D @srinivasa314/ovid       # Node ≥20; also needs Chromium (`npx playwr
 npx ovid init                     # scaffolds config, the spec guide, and the pi extension
 ```
 
-ovid is installed as a project devDependency and run via `npx ovid` (the pi extension resolves the project-local CLI), so the Playwright that runs your specs is the same one the `@srinivasa314/ovid/test` import resolves to.
-
 Then use pi as normal. (Note: You have to trust the project the first time so the extension loads or pass `-a` in headless/CI). When you ask the agent to build something and open a PR, it will, on its own:
 
 - write and run an ovid e2e test for the change,

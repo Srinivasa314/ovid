@@ -1,11 +1,11 @@
 # Writing ovid e2e tests
 
 ovid records a polished video (terminal + browser) of a test **and** asserts behavior in code.
-Specs live in `ovid/*.spec.ts` and run with `ovid test`. Assertions decide pass/fail; the video is for humans.
+Specs live in `ovid/*.spec.ts` and run with `npx ovid test`. Assertions decide pass/fail; the video is for humans.
 
 ## Skeleton
 ```ts
-import { test, expect } from "ovid/test";
+import { test, expect } from "@srinivasa314/ovid/test";
 
 test("user can save a note", async ({ ovid }) => {
   // ovid.terminal(...) and ovid.browser(...) steps
@@ -28,7 +28,7 @@ Titlebar shows the page URL by default; override with `opts.title`. Assert with 
 
 ## Example (multi-terminal + browser)
 ```ts
-import { test, expect } from "ovid/test";
+import { test, expect } from "@srinivasa314/ovid/test";
 
 test("note persists", async ({ ovid }) => {
   await ovid.terminal("flask --app api/app.py run -p 3001", { name: "API", waitFor: /Running on/, caption: "Start the API" });
@@ -46,7 +46,8 @@ test("note persists", async ({ ovid }) => {
 ```
 
 ## Rules of thumb
-- Commands run from the project root (cwd of `ovid test`); use paths relative to it.
+- Commands run from the project root (cwd of `npx ovid test`); use paths relative to it.
 - Servers are killed automatically when the test ends.
 - Each terminal/browser block becomes one video segment — keep them focused.
-- Run all specs with `ovid test`, or one with `ovid test <name-substring>`.
+- Run all specs with `npx ovid test`, or one with `npx ovid test <name-substring>`.
+- Passing runs save raw artifacts but don't render a video (kept cheap); run `npx ovid render <name-substring>` to produce `final.mp4`/`.gif` for one.

@@ -1,4 +1,4 @@
-// ovid pi extension — written by `ovid init` into .pi/extensions/, auto-discovered by pi.
+// ovid pi extension — written by `npx ovid init` into .pi/extensions/, auto-discovered by pi.
 // Lets the agent run ovid e2e tests and publish them to a PR. It shells out to the
 // project-local ovid CLI (resolved from node_modules), so it has no ovid imports
 // of its own. ovid must be installed as a project devDependency.

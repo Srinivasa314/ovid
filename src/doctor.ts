@@ -56,9 +56,9 @@ export async function doctor(): Promise<number> {
 
   const testReady = checks.filter((c) => c.scope === "test").every((c) => c.ok);
   const publishReady = checks.filter((c) => c.scope === "publish").every((c) => c.ok);
-  if (!testReady) console.log("✗ Not ready to run `ovid test` — install the components marked above.");
-  else if (!publishReady) console.log("✓ Ready for `ovid test`.  `ovid publish` also needs git + an authenticated gh.");
-  else console.log("✓ Ready for `ovid test` and `ovid publish`.");
+  if (!testReady) console.log("✗ Not ready to run `npx ovid test` — install the components marked above.");
+  else if (!publishReady) console.log("✓ Ready for `npx ovid test`.  `npx ovid publish` also needs git + an authenticated gh.");
+  else console.log("✓ Ready for `npx ovid test` and `npx ovid publish`.");
 
   return testReady ? 0 : 1;
 }
