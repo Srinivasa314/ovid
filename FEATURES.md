@@ -53,7 +53,8 @@ The pi extension (`.pi/extensions/ovid.ts`, written by `npx ovid init`) is **pro
 Once loaded, the agent: writes/runs ovid tests for features, and when it opens a PR (a raw `gh pr create` is **blocked and redirected** to `ovid_publish`) it attaches the e2e video + per-step claims automatically.
 
 ### Planned (later)
-- Parallel execution, Linux/CI, remote — future.
+- Runs on macOS and Linux (on Linux: node-pty builds from source, and rendering uses a system ffmpeg with drawtext).
+- Parallel execution, CI, remote — future.
 
 ## Technical implementation
 

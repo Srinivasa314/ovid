@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { chromium } from "playwright";
-import ffmpegStatic from "ffmpeg-static";
+import { findFfmpeg } from "./render/ffmpeg.js";
 
 interface Check {
   name: string;
@@ -31,11 +31,20 @@ export async function doctor(): Promise<number> {
 
   const chromePath = chromium.executablePath();
   const hasChromium = !!chromePath && existsSync(chromePath);
-  checks.push({ name: "Chromium (Playwright)", ok: hasChromium, scope: "test", detail: hasChromium ? chromePath : "run: npx playwright install chromium" });
+  const pwHint = `run: npx playwright install ${process.platform === "linux" ? "--with-deps " : ""}chromium`;
+  checks.push({ name: "Chromium (Playwright)", ok: hasChromium, scope: "test", detail: hasChromium ? chromePath : pwHint });
 
-  const ff = ffmpegStatic as unknown as string | null;
-  const hasFfmpeg = !!ff && existsSync(ff);
-  checks.push({ name: "ffmpeg (bundled)", ok: hasFfmpeg, scope: "test", detail: hasFfmpeg ? ff : "ffmpeg-static is missing — reinstall ovid" });
+  // ovid renders captions/titlebars with ffmpeg's drawtext filter. The bundled
+  // ffmpeg-static has it on macOS but NOT on Linux, where a system ffmpeg is needed.
+  const ff = findFfmpeg();
+  checks.push({
+    name: "ffmpeg (with drawtext)",
+    ok: !!ff,
+    scope: "test",
+    detail: ff
+      ? ff
+      : "no ffmpeg with the drawtext filter — install a system ffmpeg (Linux: sudo apt-get install -y ffmpeg; macOS: brew install ffmpeg)",
+  });
 
   const git = await run("git", ["--version"]);
   checks.push({ name: "git", ok: git.ok, scope: "publish", detail: git.ok ? git.out : "not installed" });

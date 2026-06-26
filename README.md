@@ -12,6 +12,8 @@ npm i -D @srinivasa314/ovid       # Node ≥20; also needs Chromium (`npx playwr
 npx ovid init                     # scaffolds config, the spec guide, and the pi extension
 ```
 
+Works on macOS and Linux. On Linux you also need a C/C++ toolchain (`build-essential` + `python3`, so node-pty can build), Chromium's system libs (`npx playwright install --with-deps chromium`), and a system `ffmpeg` with the `drawtext` filter (`apt-get install -y ffmpeg`) — the bundled ffmpeg-static lacks drawtext there. Run `npx ovid doctor` to check.
+
 Then use pi as normal. (Note: You have to trust the project the first time so the extension loads or pass `-a` in headless/CI). When you ask the agent to build something and open a PR, it will, on its own:
 
 - write and run an ovid e2e test for the change,
@@ -73,4 +75,4 @@ Built with: node-pty + an asciinema cast replayed in headless xterm.js (terminal
 
 ## Scope
 
-v0 targets macOS, local, single-machine. Parallel execution, Linux/CI, and remote runs are future work.
+v0 targets macOS and Linux, local, single-machine. Parallel execution, CI, and remote runs are future work.

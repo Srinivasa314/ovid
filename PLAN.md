@@ -4,9 +4,10 @@ A minimal coding-agent layer on **pi**. After implementing a feature, the agent 
 **test-as-code**, runs it, and records a **polished video** of the terminal + browser, then
 attaches it to the PR. Tests are re-runnable cheaply with no LLM.
 
-> **Platform (v1):** macOS, local, single-machine. Node required to run ovid itself, but the
-> **projects under test can be any language** (Python/Go/Rust/…). Parallel execution, Linux/CI,
-> and remote are explicitly future work. Cross-language usage is documented in the README.
+> **Platform (v1):** macOS and Linux, local, single-machine. Node required to run ovid itself, but the
+> **projects under test can be any language** (Python/Go/Rust/…). On Linux, node-pty builds from source
+> (needs build-essential + python3) and rendering needs a system ffmpeg with drawtext. Parallel execution,
+> CI, and remote are explicitly future work. Cross-language usage is documented in the README.
 
 ---
 
