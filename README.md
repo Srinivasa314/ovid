@@ -6,13 +6,13 @@ Works on any-language projects (Node is only needed to run ovid). Today it plugs
 
 ## Quick start
 
+Ovid works on macOS and Linux. On Linux you also need a C/C++ toolchain (`build-essential` + `python3`), Chromium's system libs (`npx playwright install --with-deps chromium`), and a system `ffmpeg` with the `drawtext` filter (`apt-get install -y ffmpeg`) as the bundled ffmpeg-static lacks drawtext there. Run `npx ovid doctor` before installing ovid to check.
+
 ```bash
 cd your-project
 npm i -D @srinivasa314/ovid       # Node ≥20; also needs Chromium (`npx playwright install chromium`) and `gh`
 npx ovid init                     # scaffolds config, the spec guide, and the pi extension
 ```
-
-Works on macOS and Linux. On Linux you also need a C/C++ toolchain (`build-essential` + `python3`, so node-pty can build), Chromium's system libs (`npx playwright install --with-deps chromium`), and a system `ffmpeg` with the `drawtext` filter (`apt-get install -y ffmpeg`) — the bundled ffmpeg-static lacks drawtext there. Run `npx ovid doctor` to check.
 
 Then use pi as normal. (Note: You have to trust the project the first time so the extension loads or pass `-a` in headless/CI). When you ask the agent to build something and open a PR, it will, on its own:
 
