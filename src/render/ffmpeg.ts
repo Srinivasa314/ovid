@@ -3,7 +3,9 @@ import ffmpegStatic from "ffmpeg-static";
 
 let resolved: string | null = null;
 
-function hasDrawtext(bin: string): boolean {
+/** True if `bin` is an ffmpeg that exposes the `drawtext` filter. Any spawn
+ *  failure (missing binary, non-ffmpeg, error exit) is treated as "no drawtext". */
+export function hasDrawtext(bin: string): boolean {
   try {
     const out = execFileSync(bin, ["-hide_banner", "-filters"], {
       encoding: "utf8",
@@ -16,23 +18,35 @@ function hasDrawtext(bin: string): boolean {
   }
 }
 
+/** Pure selection: the first candidate (in preference order) that passes `probe`,
+ *  skipping null/empty entries. Returns null if none qualify. Exposed for testing. */
+export function selectFfmpeg(
+  candidates: ReadonlyArray<string | null | undefined>,
+  probe: (bin: string) => boolean = hasDrawtext,
+): string | null {
+  for (const bin of candidates) {
+    if (bin && probe(bin)) return bin;
+  }
+  return null;
+}
+
+/** Candidate ffmpeg binaries, in preference order: the bundled ffmpeg-static
+ *  first (its macOS build has drawtext), then a system `ffmpeg` on PATH (needed
+ *  on Linux, where the ffmpeg-static build lacks drawtext). */
+export function ffmpegCandidates(): Array<string | null> {
+  return [(ffmpegStatic as unknown as string | null) ?? null, "ffmpeg"];
+}
+
 /**
  * Find an ffmpeg binary that supports the `drawtext` filter (libfreetype), which
- * ovid needs for captions + titlebars. Prefers the bundled ffmpeg-static — its
- * macOS build has drawtext — but the ffmpeg-static Linux build does NOT, so fall
- * back to a system `ffmpeg` on PATH there. Returns null if neither has drawtext.
- * Memoized once a working binary is found.
+ * ovid needs for captions + titlebars. Returns null if none qualify. Memoized
+ * once a working binary is found (a null result is not cached, so a later install
+ * of a system ffmpeg is picked up).
  */
 export function findFfmpeg(): string | null {
   if (resolved) return resolved;
-  const candidates = [(ffmpegStatic as unknown as string | null) ?? null, "ffmpeg"].filter(Boolean) as string[];
-  for (const bin of candidates) {
-    if (hasDrawtext(bin)) {
-      resolved = bin;
-      return bin;
-    }
-  }
-  return null;
+  resolved = selectFfmpeg(ffmpegCandidates());
+  return resolved;
 }
 
 function ffmpegBin(): string {

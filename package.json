@@ -46,7 +46,8 @@
     "demo": "tsx src/cli.ts demo:terminal",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
-    "postinstall": "node scripts/postinstall.mjs"
+    "postinstall": "node scripts/postinstall.mjs",
+    "test:unit": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@playwright/test": "^1.61.1",
