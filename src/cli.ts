@@ -16,6 +16,15 @@ const collect = (v: string, acc: string[]) => {
   return acc;
 };
 
+// For `render`: turn an interrupt into a clean process.exit (conventional
+// 128+signal code) so ffmpeg's "exit" cleanup hook fires and no encode is left
+// orphaned. NOT used by `test` (run.ts does its own graceful supervision) nor by
+// `publish` (which may itself call runTests, so it must not pre-empt that path).
+const exitOnInterrupt = () => {
+  process.once("SIGINT", () => process.exit(130));
+  process.once("SIGTERM", () => process.exit(143));
+};
+
 // Read from the package's own package.json (dist/cli.js → ../package.json) so
 // the reported version always tracks the published one.
 const { version } = JSON.parse(
@@ -54,6 +63,7 @@ program
   .argument("[filter]", "only render runs whose slug matches this substring")
   .description("Render saved runs (casts + clips) into final.mp4/gif — passing runs aren't rendered automatically")
   .action(async (filter: string | undefined) => {
+    exitOnInterrupt();
     const runsDir = join(process.cwd(), ".ovid", "runs");
     if (!existsSync(runsDir)) {
       console.error("No runs found. Run `npx ovid test` first.");

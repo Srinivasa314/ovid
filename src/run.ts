@@ -5,6 +5,8 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { packageRoot } from "./render/paths.js";
 import { slugify } from "./config.js";
+import { constants as osConstants } from "node:os";
+import { collectDescendants, killPids, killTreeSync } from "./runner/kill.js";
 
 const require = createRequire(import.meta.url);
 
@@ -55,16 +57,89 @@ export async function runTests(projectRoot: string, opts: RunOptions = {}): Prom
   if (opts.filter) args.push(opts.filter);
 
   const code = await new Promise<number>((resolve) => {
+    // Run Playwright in its own process group (detached) so we — not the terminal
+    // — own interrupt delivery: an interrupt comes to us, we forward it to the
+    // group for a graceful teardown (which runs the fixture teardown, killing the
+    // pty shells + their dev servers), then reap the whole tree as a backstop so
+    // nothing (servers, browsers, recorder ffmpeg) is left orphaned.
+    const detached = process.platform !== "win32";
     const p = spawn(pwBin, args, {
       cwd: projectRoot,
       stdio: opts.json ? ["ignore", "ignore", "inherit"] : "inherit",
       env,
+      detached,
     });
+
+    let snapshot: number[] = [];
+    let forwarded = false;
+    let graceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    // Reap while Playwright may still be alive: kill its live tree, then any
+    // pre-interrupt descendants not already covered (children that reparented to
+    // init). Dedupe so we don't double-signal a pid.
+    const reapLive = () => {
+      const killed = p.pid ? new Set(killTreeSync(p.pid)) : new Set<number>();
+      killPids(snapshot.filter((pid) => !killed.has(pid)));
+    };
+    // After Playwright has exited its pid is gone (and could be reused), so never
+    // target it here — only chase the pre-interrupt snapshot of possible orphans.
+    const reapSnapshot = () => killPids(snapshot);
+
+    const onSignal = (sig: NodeJS.Signals) => {
+      if (!p.pid) return;
+      if (!forwarded) {
+        forwarded = true;
+        // Snapshot the tree now, before anything dies/reparents.
+        snapshot = collectDescendants(p.pid);
+        // Forward to the whole group for a graceful Playwright shutdown.
+        try {
+          if (detached) process.kill(-p.pid, sig);
+          else p.kill(sig);
+        } catch {
+          /* already gone */
+        }
+        // If it doesn't exit in time, force-reap the live tree.
+        graceTimer = setTimeout(reapLive, 4000);
+        graceTimer.unref?.();
+      } else {
+        // Second interrupt: stop waiting and reap now.
+        reapLive();
+      }
+    };
+
+    const onSigint = () => onSignal("SIGINT");
+    const onSigterm = () => onSignal("SIGTERM");
+    // Last-ditch: if ovid itself is exiting while Playwright is still running
+    // (e.g. an uncaught error), take its tree down. No-op once the child exited.
+    const onExit = () => {
+      if (p.exitCode === null && !p.killed && p.pid) killTreeSync(p.pid);
+    };
+    process.on("SIGINT", onSigint);
+    process.on("SIGTERM", onSigterm);
+    process.on("exit", onExit);
+
+    const cleanup = () => {
+      if (graceTimer) clearTimeout(graceTimer);
+      process.off("SIGINT", onSigint);
+      process.off("SIGTERM", onSigterm);
+      process.off("exit", onExit);
+    };
+
     p.on("error", (e) => {
+      cleanup();
       console.error("ovid: failed to launch Playwright:", e.message);
       resolve(1);
     });
-    p.on("exit", (c) => resolve(c ?? 1));
+    p.on("exit", (c, signal) => {
+      // Chase any orphans an interrupted, not-fully-graceful shutdown left behind
+      // (snapshot only — the root pid is already gone), then resolve with a
+      // conventional exit code (128 + signal number) when killed by a signal.
+      if (forwarded) reapSnapshot();
+      cleanup();
+      if (c != null) resolve(c);
+      else if (signal) resolve(128 + (osConstants.signals[signal] ?? 15));
+      else resolve(1);
+    });
   });
 
   if (opts.json) {

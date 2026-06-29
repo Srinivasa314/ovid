@@ -1,6 +1,7 @@
 import { spawn, type IPty } from "node-pty";
 import { randomBytes } from "node:crypto";
 import { CastWriter } from "./cast.js";
+import { killTreeSync } from "./kill.js";
 
 // Private OSC marker: ESC ] 5379 ; <nonce> ; <exitcode> BEL
 // Emitted (invisibly) by bash's PROMPT_COMMAND before every prompt. We parse it
@@ -129,6 +130,11 @@ export class Terminal {
     return this.castStartMono;
   }
 
+  /** OS pid of the shell process backing this terminal. */
+  get pid(): number {
+    return this.pty.pid;
+  }
+
   /** Let the trailing prompt/output land in the cast before we stop. */
   async settle(ms = 400): Promise<void> {
     await delay(ms);
@@ -139,8 +145,18 @@ export class Terminal {
   }
 
   dispose(): void {
+    // Kill the whole descendant tree, not just the shell: a server started via
+    // start()/{ waitFor } runs in its own (foreground job) process group, and
+    // node-pty's kill() only signals the shell — so killing the shell alone
+    // would orphan the server. Snapshot + SIGKILL the tree, then kill the shell
+    // as a backstop.
     try {
-      this.pty.kill();
+      killTreeSync(this.pty.pid);
+    } catch {
+      /* best-effort */
+    }
+    try {
+      this.pty.kill("SIGKILL");
     } catch {
       /* already gone */
     }

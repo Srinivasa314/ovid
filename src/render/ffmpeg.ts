@@ -1,7 +1,35 @@
-import { spawn, execFileSync } from "node:child_process";
+import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import ffmpegStatic from "ffmpeg-static";
 
 let resolved: string | null = null;
+
+// Live ffmpeg children we spawned directly (render/merge/duration). If this
+// process exits while one is mid-encode — e.g. `ovid render`/`ovid publish` is
+// interrupted — kill them so no ffmpeg is orphaned. Only an "exit" handler is
+// installed here (synchronous, no re-raise) so importing this module inside the
+// Playwright worker can't interfere with Playwright's own signal handling; the
+// CLI converts SIGINT/SIGTERM into a clean exit for the standalone commands.
+const liveFfmpeg = new Set<ChildProcess>();
+let exitHookInstalled = false;
+
+function track<T extends ChildProcess>(p: T): T {
+  if (!exitHookInstalled) {
+    exitHookInstalled = true;
+    process.on("exit", () => {
+      for (const c of liveFfmpeg) {
+        try {
+          c.kill("SIGKILL");
+        } catch {
+          /* already gone */
+        }
+      }
+    });
+  }
+  liveFfmpeg.add(p);
+  p.on("exit", () => liveFfmpeg.delete(p));
+  p.on("error", () => liveFfmpeg.delete(p));
+  return p;
+}
 
 /** True if `bin` is an ffmpeg that exposes the `drawtext` filter. Any spawn
  *  failure (missing binary, non-ffmpeg, error exit) is treated as "no drawtext". */
@@ -66,7 +94,7 @@ function ffmpegBin(): string {
 /** Read a media file's duration (seconds) by parsing ffmpeg's stderr header. */
 export function getDuration(file: string): Promise<number> {
   return new Promise((resolve) => {
-    const p = spawn(ffmpegBin(), ["-hide_banner", "-i", file], { stdio: ["ignore", "ignore", "pipe"] });
+    const p = track(spawn(ffmpegBin(), ["-hide_banner", "-i", file], { stdio: ["ignore", "ignore", "pipe"] }));
     let err = "";
     p.stderr.on("data", (d: Buffer) => (err += d.toString()));
     p.on("error", () => resolve(0));
@@ -79,9 +107,11 @@ export function getDuration(file: string): Promise<number> {
 
 export function runFfmpeg(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
-    const p = spawn(ffmpegBin(), ["-y", "-hide_banner", "-loglevel", "error", ...args], {
-      stdio: ["ignore", "ignore", "pipe"],
-    });
+    const p = track(
+      spawn(ffmpegBin(), ["-y", "-hide_banner", "-loglevel", "error", ...args], {
+        stdio: ["ignore", "ignore", "pipe"],
+      }),
+    );
     let err = "";
     p.stderr.on("data", (d: Buffer) => (err += d.toString()));
     p.on("error", reject);
